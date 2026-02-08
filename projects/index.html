@@ -8,7 +8,6 @@
     document.addEventListener("DOMContentLoaded", function() {
       var currentlyDisplayed = "projects";
       document.getElementById("projects").style.display = "block";
-
       document.querySelectorAll('.nav-link').forEach(function(link) {
         link.addEventListener('click', function() {
           document.querySelectorAll('.nav-link').forEach(function(link) {
@@ -17,35 +16,14 @@
           link.classList.add('selected');
         });
       });
-
       document.getElementById("language-link").addEventListener("click", function(event) {
         event.preventDefault();
         if (currentlyDisplayed === "language") {
-          document.getElementById("language").style.display = "none";
+          document.getElementById("language").style.display = "block";
           currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
         } else {
           document.getElementById("language").style.display = "block";
           currentlyDisplayed = "language";
-        }
-      });
-      document.getElementById("functions-link").addEventListener("click", function(event) {
-        event.preventDefault();
-        if (currentlyDisplayed === "functions") {
-          document.getElementById("functions").style.display = "none";
-          currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
-        } else {
-          document.getElementById("language").style.display = "none";
-          /*document.getElementById("menu1").style.display = "none";
-          document.getElementById("menu2").style.display = "none";*/
-          document.getElementById("projects").style.display = "none";
-          document.getElementById("functions").style.display = "block";
-          currentlyDisplayed = "functions";
         }
       });
       document.getElementById("projects-link").addEventListener("click", function(event) {
@@ -53,10 +31,6 @@
         if (currentlyDisplayed === "projects") {
           document.getElementById("projects").style.display = "none";
           currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
-          
         } else {
           document.getElementById("language").style.display = "none";
           /*document.getElementById("menu1").style.display = "none";
@@ -66,35 +40,20 @@
           currentlyDisplayed = "projects";
         }
       });
-
-      document.getElementById("original-projects-link").addEventListener("click", function(event) {
+      document.getElementById("functions-link").addEventListener("click", function(event) {
         event.preventDefault();
-        if (currentlyDisplayed === "original-projects") {
-          document.getElementById("original-projects").style.display = "none";
+        if (currentlyDisplayed === "functions") {
+          document.getElementById("functions").style.display = "none";
           currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
-
         } else {
-          document.getElementById("original-projects").style.display = "block";
-          currentlyDisplayed = "original-projects";
+          document.getElementById("language").style.display = "none";
+          /*document.getElementById("menu1").style.display = "none";
+          document.getElementById("menu2").style.display = "none";*/
+          document.getElementById("projects").style.display = "none";
+          document.getElementById("functions").style.display = "block";
+          currentlyDisplayed = "functions";
         }
       });
-      document.getElementById("copied-projects-link").addEventListener("click", function(event) {
-        event.preventDefault();
-        if (currentlyDisplayed === "copied-projects") {
-          document.getElementById("copied-projects").style.display = "none";
-          currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
-        } else {
-          document.getElementById("copied-projects").style.display = "block";
-          currentlyDisplayed = "copied-projects";
-        }
-      });
-
     });
   </script>
 </head>
@@ -103,7 +62,7 @@
     <h1>D4ave Website / D4av3 Portfolio</h1>
   </header>
   <p></p>
-  <nav> <!--navegation menu-->
+  <nav>
     <li><a href="#language" id="language-link" class="nav-link">Language</a></li>
     <ul>
       <li><a href="../index.html" id="home-link" class="nav-link" >Home</a></li>
@@ -133,18 +92,14 @@
       select box.
     </p>-->
   </section>
-
-  <!--
-  <section id="menu1" style="display: none;">
+  <!--<section id="menu1" style="display: none;">
     <h2>Menu1</h2>
     <p>Menu 1</p>
   </section>
   <section id="menu2" style="display: none;">
     <h2>Menu2</h2>
     <p>Menu 2</p>
-  </section>
-  -->
-
+  </section>-->
   <section id="functions" style="display: none;">
     <h2>Functions</h2>  
     <p>This is where all the functions are going to be:</p>
@@ -154,28 +109,30 @@
       
       <p></p>
       <form method="post" enctype="multipart/form-data">
-        <h2>File upload:</h2> <!--https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file-->
+        <div>
+          <h2>File upload:</h2> <!--https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file-->
 
-        <input type="file" id="upload" name="upload"/>
-        <p><a id="link" download >Download the file</a> <!--https://stackoverflow.com/questions/57953389/download-file-just-uploaded-with-html-input-file-->
-        <script>
-          const input = document.getElementById('upload');
-          const link = document.getElementById('link');
-          let objectURL;
+          <input type="file" id="upload" name="upload"/>
+          <p><a id="link" download >Download the file</a> <!--https://stackoverflow.com/questions/57953389/download-file-just-uploaded-with-html-input-file-->
+          <script>
+            const input = document.getElementById('upload');
+            const link = document.getElementById('link');
+            let objectURL;
 
-          input.addEventListener('change', function () {
-            if (objectURL) {
-              // revoke the old object url to avoid using more memory than needed
-              URL.revokeObjectURL(objectURL);  
-            }
+            input.addEventListener('change', function () {
+              if (objectURL) {
+                // revoke the old object url to avoid using more memory than needed
+                URL.revokeObjectURL(objectURL);  
+              }
 
-            const file = this.files[0];
-            objectURL = URL.createObjectURL(file);
+              const file = this.files[0];
+              objectURL = URL.createObjectURL(file);
 
-            link.download = file.name; // this name is used when the user downloads the file
-            link.href = objectURL;
-          });
-        </script>
+              link.download = file.name; // this name is used when the user downloads the file
+              link.href = objectURL;
+            });
+          </script>
+        </div>
       </form>
       <p></p>
       <div id="file-display"></div>
@@ -262,51 +219,40 @@
         });
         document.get
       </script>
+      <h2><a href="sign_in.html">Sign in</a></h2>
+      <hr/>
     </section>
   </section>
   <section id="projects" style="display: none;">
-    <h2>All the Projects:</h2>
-    <h2><a href="#original-projects" id="original-projects-link" class="nav-link " >Original Projects</a></h2>
-    <section id="original-projects" style="display: none;">
-      <p>Here are going to be all the projects that i do myself, the ones that i do from tutorials or interesting project that i re do, and that i whanted to have here</p>
-      <section id="original-projects-list" style="display: block;">
-        <h2>Ejemplo 1</h2>
-        <a href="examples/ejemplo1">Ejemplo 1</a>
-      </section>
+    <h2>Projects</h2>
+    <p>Here are going to be all my projects, and other people's projects that I wanted to collect</p>
+    <section id="projects-list" style="display: block;">
+      <h2>Snake Game (html)</h2>
+      <a href="games/snake/">Image of the snake game (html)</a>
     </section>
-    <h2><a href="#copied-projects" id="copied-projects-link" class="nav-link " >Copied Projects</a></h2>
-    <section id="copied-projects" style="display: none;">
-      <p>Here are going to be all the projects that y whanted to save from other people's projects.
-      <p>If one of this projects is yours and you dont whant it to be hear, contact me and y will remove it.</p>
-      </p>
-      <section id="copied-projects-list" style="display: block;">
-        <h2>Snake Game (html)</h2>
-        <a href="games/snake/">Image of the snake game (html)</a>
-      </section>
-      <section id="copied-projects-list" style="display: block;">
-        <h2>Minegraft (JS)</h2>
-        <a href="games/Minecraft-master/3dminecraft.html">Image of the Minectraft (JS)</a>
-      </section>
-      <section id="copied-projects-list" style="display: block;">
-        <h2>Pacman (html)</h2>
-        <a href="games/pacman/">Image of the Pacman (html)</a>
-      </section>
-      <section id="copied-projects-list" style="display: block;">
-        <h2>Ahorcado (html)</h2>
-        <a href="games/ahorcado/ahorcado.html">Image of the ahorcado (html)</a>
-      </section>
-      <section id="copied-projects-list" style="display: block;">
-        <h2>ping-pong (html)</h2>
-        <a href="games/ping-pong/">Image of the ping-pong (html)</a>
-      </section>
-      <section id="copied-projects-list" style="display: block;">
-        <h2>Chess-Game (html)</h2>
-        <a href="games/Chess-Game/">Chess-Game (html)</a>
-      </section>
-      <section id="copied-projects-list" style="display: block;">
-        <h2>Gorilla.bas (html)</h2>
-        <a href="games/Gorilla.bas/gorilla">Gorilla.bas (html)</a>
-      </section>
+    <section id="projects-list" style="display: block;">
+      <h2>Minegraft (JS)</h2>
+      <a href="games/Minecraft-master/3dminecraft.html">Image of the Minectraft (JS)</a>
+    </section>
+    <section id="projects-list" style="display: block;">
+      <h2>Pacman (html)</h2>
+      <a href="games/pacman/">Image of the Pacman (html)</a>
+    </section>
+    <section id="projects-list" style="display: block;">
+      <h2>Ahorcado (html)</h2>
+      <a href="games/ahorcado/ahorcado.html">Image of the ahorcado (html)</a>
+    </section>
+    <section id="projects-list" style="display: block;">
+      <h2>ping-pong (html)</h2>
+      <a href="games/ping-pong/">Image of the ping-pong (html)</a>
+    </section>
+    <section id="projects-list" style="display: block;">
+      <h2>Chess-Game (html)</h2>
+      <a href="games/Chess-Game/">Chess-Game (html)</a>
+    </section>
+    <section id="projects-list" style="display: block;">
+      <h2>Gorilla.bas (html)</h2>
+      <a href="games/Gorilla.bas/gorilla">Gorilla.bas (html)</a>
     </section>
   </section>
   <footer>

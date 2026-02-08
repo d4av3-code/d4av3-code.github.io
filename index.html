@@ -8,7 +8,7 @@
 
   <script>
 
-/*//////////////old navegation funcionality
+///////////////It's gonna work right?
     document.addEventListener("DOMContentLoaded", function() {
       var currentlyDisplayed = null;
       document.querySelectorAll('.nav-link').forEach(function(link) {
@@ -46,33 +46,18 @@
           });
         });
       });
-///////////////old navegation funcionality-END (I leave it here to remember that i have done this cancer*/
+///////////////It's gonna work right?
 
-//new try of nav funcionality
-    document.addEventListener("DOMContentLoaded", function() {
-      var currentlyDisplayed = "projects";
-      document.getElementById("projects").style.display = "block";
-
-      document.querySelectorAll('.nav-link').forEach(function(link) {
-        link.addEventListener('click', function() {
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
-          link.classList.add('selected');
-        });
-      });
-//new try of nav funcionality-END
 
       document.getElementById("language-link").addEventListener("click", function(event) {
         event.preventDefault();
         if (currentlyDisplayed === "language") {
           document.getElementById("language").style.display = "none";
+          document.getElementById("language-link").className = "nav-link"
           currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
         } else {
           document.getElementById("language").style.display = "block";
+          document.getElementById("language-link").className = "nav-link selected"
           /*
           document.getElementById("overview").style.display = "none";
           document.getElementById("projects").style.display = "none";
@@ -87,9 +72,6 @@
         if (currentlyDisplayed === "overview") {
           document.getElementById("overview").style.display = "none";
           currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
         } else {
           document.getElementById("language").style.display = "none";
           document.getElementById("overview").style.display = "block";
@@ -104,9 +86,6 @@
         if (currentlyDisplayed === "projects") {
           document.getElementById("projects").style.display = "none";
           currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
         } else {
           document.getElementById("language").style.display = "none";
           document.getElementById("overview").style.display = "none";
@@ -121,9 +100,6 @@
         if (currentlyDisplayed === "about") {
           document.getElementById("about").style.display = "none";
           currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
         } else {
           document.getElementById("language").style.display = "none";
           document.getElementById("overview").style.display = "none";
@@ -138,9 +114,6 @@
         if (currentlyDisplayed === "contact") {
           document.getElementById("contact").style.display = "none";
           currentlyDisplayed = null;
-          document.querySelectorAll('.nav-link').forEach(function(link) {
-            link.classList.remove('selected');
-          });
         } else {
           document.getElementById("language").style.display = "none";
           document.getElementById("overview").style.display = "none";
@@ -150,7 +123,6 @@
           currentlyDisplayed = "contact";
         }
       });
-      
     });
   </script>
 </head>
@@ -164,7 +136,7 @@
     <ul>
       <li><a href="#overview" id="overview-link" class="nav-link" >Overview</a></li>
       <li>|</li>
-      <li><a href="#projects" id="projects-link" class="nav-link selected" >Projects & functions</a></li>
+      <li><a href="#projects" id="projects-link" class="nav-link" >Projects & functions</a></li>
       <li>|</li>
       <li><a href="#about" id="about-link" class="nav-link" >About me</a></li>
       <li>|</li>
@@ -197,6 +169,7 @@
         <source src="images&videos/programing.mp4" type="video/mp4" />
         Video can't be showed
       </video>
+
     </section>
     <section id="projects" style="display: none;">
       <h2>Projects & functions</h2>
@@ -206,18 +179,17 @@
     </section>
     <section id="about" style="display: none;">
       <h2>About me</h2>
-      <!--<div id="columns">-->
-        <li style="margin-left: 10px;">My name is David Badal Beltran</li>
-        <li style="margin-left: 10px;">I'm a Web programmer</li>
-        <li style="margin-left: 10px;">I have a big intrerest in programation as a software engineer
-        <li style="margin-left: 10px;">I also have as well a big interest in frontend</li>
-        <p>My portfolio webpage is at <a href="https://d4av3-code.github.io">d4av3-code.github.io</a></p>
-      <!--</div>-->
+      <div id="columns">
+        <li>My name is David Badal Beltran</li>
+        <li>I'm a Web programmer</li>
+        <li>I have a Higher Degree in Web Applications</li>
+        <li>I </li>
+      </div>
     </section>
     <section id="contact" style="display: none;">
       <h2>Contact me</h2>
-      <p>If you are interested in contact me, you can contact by email at <a href="mailto:d4av3.code@gmail.com">d4av3.code@gmail.com</a></p>
-      <p>Github: <a href="https://github.com/d4av3-code">https://github.com/d4av3-code</a> </p>
+      <p>If you are interested in contact me, you can contact by email at random@mail.com or by phone at 555-555-5555.</p>
+      <p>Github: <a href="https://github.com/d4av3">https://github.com/d4av3</a> </p>
     </section>
   </main>
   <footer>
