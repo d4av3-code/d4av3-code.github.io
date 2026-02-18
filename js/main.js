@@ -373,7 +373,7 @@ async function loadBlog() {
 document.getElementById('contact-form').addEventListener('submit', function(e) {
   e.preventDefault();
   document.getElementById('form-feedback').textContent =
-    '✓ Message sent! (connect to Formspree or similar to make this real)';
+    '✓ Message sent! (Currently nothing is connected on the backend)';
   this.reset();
 });
 

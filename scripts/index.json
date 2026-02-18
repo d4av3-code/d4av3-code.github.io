@@ -1,0 +1,20 @@
+[
+  {
+    "file": "backup.sh",
+    "name": "backup.sh",
+    "lang": "bash",
+    "desc": "Compresses a folder and saves it with a timestamp. Quick server backups."
+  },
+  {
+    "file": "sysinfo.sh",
+    "name": "sysinfo.sh",
+    "lang": "bash",
+    "desc": "Displays CPU, RAM, disk usage, uptime and IP in a clean summary."
+  },
+  {
+    "file": "others.py",
+    "name": "others.py",
+    "lang": "python",
+    "desc": "Other scripts"
+  }
+]
