@@ -163,7 +163,7 @@ they jump to Scripts with that language pre-filtered.
 
 The form currently just shows a message. To make it send real emails:
 
-1. Create a free account at https://formspree.io
+1. Create a free account at ![formspree.io](https://formspree.io)
 2. In `index.html`, change the form:
 
    ```html
