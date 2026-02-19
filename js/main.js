@@ -111,7 +111,6 @@ document.querySelectorAll('.tag-lang').forEach(tag => {
   tag.addEventListener('click', () => {
     const lang = tag.dataset.lang;
     showSection('scripts');
-    // wait for section to render, then apply filter
     setTimeout(() => applyFilter(lang), 80);
   });
 });
@@ -121,18 +120,37 @@ document.querySelectorAll('.tag-lang').forEach(tag => {
 // ─────────────────────────────────────
 let currentFilter = 'all';
 
-function applyFilter(lang) {
-  currentFilter = lang;
+function applyFilter(tag) {
+  currentFilter = tag;
 
-  // update filter buttons
   document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.filter === lang);
+    btn.classList.toggle('active', btn.dataset.filter === tag);
   });
 
-  // show/hide cards
-  document.querySelectorAll('.script-card').forEach(card => {
-    const cardLang = card.dataset.lang || '';
-    card.classList.toggle('hidden', lang !== 'all' && cardLang !== lang);
+  if (tag === 'all') {
+    // show everything, restore collapsed state
+    document.querySelectorAll('.sc').forEach(c => c.classList.remove('sc-hidden'));
+    document.querySelectorAll('.sg').forEach(g => g.classList.remove('sg-hidden'));
+    return;
+  }
+
+  // 1. Show/hide individual script cards
+  document.querySelectorAll('.sc').forEach(card => {
+    const tags = (card.dataset.tags || '').split(',');
+    card.classList.toggle('sc-hidden', !tags.includes(tag));
+  });
+
+  // 2. For each group bottom-up: visible if it has at least one visible child (card or sub-group)
+  //    We process deepest groups first by reversing the NodeList
+  const allGroups = [...document.querySelectorAll('.sg')].reverse();
+  allGroups.forEach(group => {
+    const hasVisibleCard  = [...group.querySelectorAll(':scope > .sg-children > .sc')]
+                              .some(c => !c.classList.contains('sc-hidden'));
+    const hasVisibleGroup = [...group.querySelectorAll(':scope > .sg-children > .sg')]
+                              .some(g => !g.classList.contains('sg-hidden'));
+    group.classList.toggle('sg-hidden', !hasVisibleCard && !hasVisibleGroup);
+    // force-open groups that have matches so the tree is navigable
+    if (!group.classList.contains('sg-hidden')) group.classList.add('sg-open');
   });
 }
 
@@ -140,73 +158,148 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => applyFilter(btn.dataset.filter));
 });
 
-// toggle script body open/close
-function toggleScript(header) {
-  const card   = header.closest('.script-card');
-  const body   = card.querySelector('.script-body');
-  const toggle = header.querySelector('.script-toggle');
-  if (!body) return;
-  const isOpen = body.classList.toggle('open');
-  if (toggle) toggle.textContent = isOpen ? '▲ hide' : '▼ view';
+// ─────────────────────────────────────
+// SCRIPTS — toggle group open/closed
+// ─────────────────────────────────────
+function toggleGroup(hdr) {
+  hdr.closest('.sg').classList.toggle('sg-open');
 }
-// expose globally for onclick in injected HTML
+window.toggleGroup = toggleGroup;
+
+// toggle individual script code block
+function toggleScript(row) {
+  const card   = row.closest('.sc');
+  const body   = card.querySelector('.sc-body');
+  if (!body) return;
+  const isOpen = body.classList.toggle('sc-body-open');
+  row.classList.toggle('sc-open', isOpen);
+}
 window.toggleScript = toggleScript;
 
 // ─────────────────────────────────────
 // DYNAMIC LOADERS
 // ─────────────────────────────────────
 
-/* SCRIPTS
-   Reads scripts/index.json → array of { file, name, lang, desc }
-   Then fetches each scripts/{file} and renders a card.
+/* SCRIPTS — recursive tree
+   scripts/index.json format:
 
-   index.json example:
-   [
-     { "file": "backup.sh",      "name": "backup.sh",      "lang": "bash",  "desc": "Automated timestamped backup" },
-     { "file": "sysinfo.sh",     "name": "sysinfo.sh",     "lang": "bash",  "desc": "Quick system overview" },
-     { "file": "user_create.ps1","name": "user_create.ps1","lang": "powershell","desc": "Bulk user creation from CSV" }
-   ]
+   A script entry (leaf):
+   {
+     "file": "backup.sh",
+     "name": "backup.sh",
+     "lang": "bash",
+     "tags": ["bash", "backup", "rsync"],
+     "desc": "Short description."
+   }
+
+   A group entry (can contain scripts AND nested groups):
+   {
+     "group": "python",
+     "icon": "🐍",          ← optional, default 📁
+     "tags": ["python"],    ← inherited by all children for filtering
+     "items": [
+       { "file": "...", ... },
+       { "group": "subgroup", "items": [...] }
+     ]
+   }
+
+   Tags are INHERITED — a script's effective tags = its own tags UNION all ancestor group tags.
+   Filter shows a group if ANY descendant script matches.
 */
 async function loadScripts() {
   const container = document.getElementById('scripts-list');
   try {
     const manifest = await fetch('scripts/index.json').then(r => r.json());
-
     if (!manifest.length) {
-      container.innerHTML = '<p class="loading-msg">No scripts yet. Add entries to scripts/index.json.</p>';
+      container.innerHTML = '<p class="loading-msg">No scripts yet.</p>';
       return;
     }
 
-    const langClass = { bash:'sl-bash', powershell:'sl-ps', python:'sl-py', js:'sl-js', html:'sl-html' };
+    const langClass = { bash:'sl-bash', powershell:'sl-ps', python:'sl-py', js:'sl-js', html:'sl-html', favorite:'sl-favorite' };
 
-    const cards = await Promise.all(manifest.map(async entry => {
-      let code = '# (could not load file)';
-      try {
-        code = await fetch(`scripts/${entry.file}`).then(r => r.text());
-      } catch(_) {}
-
-      const cls  = langClass[entry.lang] || 'sl-bash';
-      const safe = escapeHtml(code);
-
-      return `
-<div class="script-card" data-lang="${entry.lang}">
-  <div class="script-header" onclick="toggleScript(this)">
-    <div class="script-meta">
-      <span class="script-lang ${cls}">${entry.lang}</span>
-      <span class="script-name">${escapeHtml(entry.name)}</span>
-    </div>
-    <p class="script-desc">${escapeHtml(entry.desc)}</p>
-    <span class="script-toggle">▼ view</span>
-  </div>
-  <div class="script-body">
-    <pre><code>${safe}</code></pre>
-  </div>
-</div>`;
+    // Pre-fetch all script files in parallel to avoid waterfall
+    const fileCache = {};
+    function collectFiles(items) {
+      for (const item of items) {
+        if (item.file) fileCache[item.file] = null;
+        else if (item.items) collectFiles(item.items);
+      }
+    }
+    collectFiles(manifest);
+    await Promise.all(Object.keys(fileCache).map(async f => {
+      try { fileCache[f] = await fetch(`scripts/${f}`).then(r => r.text()); }
+      catch(_) { fileCache[f] = '# could not load file'; }
     }));
 
-    container.innerHTML = cards.join('');
+    // Count all leaf scripts in a group (for the badge)
+    function countScripts(items) {
+      let n = 0;
+      for (const it of items) {
+        if (it.file) n++;
+        else if (it.items) n += countScripts(it.items);
+      }
+      return n;
+    }
 
-    // re-apply current filter after load
+    // Render a script card (leaf)
+    function renderScript(entry, ancestorTags) {
+      const ownTags  = entry.tags || [];
+      const allTags  = [...new Set([...ancestorTags, ...ownTags])];
+      const cls      = langClass[entry.lang] || 'sl-bash';
+      const pills    = ownTags.map(t => `<span class="stag">${escapeHtml(t)}</span>`).join('');
+      const code     = escapeHtml(fileCache[entry.file] || '');
+      return `
+<div class="sc" data-tags="${allTags.join(',')}">
+  <div class="sc-row" onclick="toggleScript(this)">
+    <span class="sc-arrow">▶</span>
+    <span class="sc-lang ${cls}">${entry.lang}</span>
+    <span class="sc-name">${escapeHtml(entry.name)}</span>
+    <span class="sc-desc">${escapeHtml(entry.desc)}</span>
+    <div class="sc-tag-pills">${pills}</div>
+  </div>
+  <div class="sc-body">
+    <pre><code>${code}</code></pre>
+  </div>
+</div>`;
+    }
+
+    // Render a group (recursive)
+    function renderGroup(item, ancestorTags, depth) {
+      const groupTags  = [...new Set([...ancestorTags, ...(item.tags || [])])];
+      const icon       = item.icon || '📁';
+      const name       = item.group || 'group';
+      const count      = countScripts(item.items || []);
+      const groupPills = (item.tags || []).map(t => `<span class="stag">${escapeHtml(t)}</span>`).join('');
+      const childrenHtml = (item.items || []).map(child =>
+        child.file ? renderScript(child, groupTags)
+                   : renderGroup(child, groupTags, depth + 1)
+      ).join('');
+
+      // depth=0 groups start open
+      const openClass = depth === 0 ? 'sg-open' : '';
+
+      return `
+<div class="sg ${openClass}">
+  <button class="sg-hdr" onclick="toggleGroup(this)">
+    <span class="sg-arrow">▶</span>
+    <span class="sg-icon">${icon}</span>
+    <span class="sg-name">${escapeHtml(name)}</span>
+    <div class="sg-tag-pills">${groupPills}</div>
+    <span class="sg-count">${count} script${count !== 1 ? 's' : ''}</span>
+  </button>
+  <div class="sg-children">
+    ${childrenHtml}
+  </div>
+</div>`;
+    }
+
+    // Render top-level items
+    const html = manifest.map(item =>
+      item.file ? renderScript(item, [])
+                : renderGroup(item, [], 0)
+    ).join('');
+
+    container.innerHTML = html;
     applyFilter(currentFilter);
 
   } catch(err) {
@@ -373,7 +466,7 @@ async function loadBlog() {
 document.getElementById('contact-form').addEventListener('submit', function(e) {
   e.preventDefault();
   document.getElementById('form-feedback').textContent =
-    '✓ Message sent! (Currently nothing is connected on the backend)';
+    '✓ Message sent! (connect to Formspree or similar to make this real)';
   this.reset();
 });
 
