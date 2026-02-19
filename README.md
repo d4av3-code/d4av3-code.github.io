@@ -2,7 +2,7 @@
 
 ## File structure
 
-```
+```txt
 d4av3-code.github.io/
 │
 ├── index.html                  ← The whole portfolio (single page app)
@@ -27,7 +27,7 @@ d4av3-code.github.io/
 │   ├── games/arcade/
 │   │   ├── pacman/
 │   │   └── ping-pong/
-│   ├── my-standalone-tool/     ← flat (no group) projects go directly here
+│   ├── tmp     ← flat (no group) projects go directly on projects
 │   │   ├── project.json
 │   │   └── index.html
 │   └── _TEMPLATE/
@@ -44,7 +44,7 @@ d4av3-code.github.io/
 │   └── ...
 │
 └── cv/
-    └── cv-david-badal.pdf      ← Put your CV here
+    └── cv-david-badal.pdf      ← My CV here
 ```
 
 ---
@@ -53,9 +53,11 @@ d4av3-code.github.io/
 
 1. Put the script file in `scripts/` (e.g. `scripts/firewall.sh`)
 2. Add one line to `scripts/index.json`:
+
    ```json
    { "file": "firewall.sh", "name": "firewall.sh", "lang": "bash", "desc": "Sets up iptables rules for a basic server." }
    ```
+
    Available `lang` values: `bash`, `powershell`, `python`, `js`, `html`
 
 That's it. The site loads the file content automatically.
@@ -67,27 +69,33 @@ That's it. The site loads the file content automatically.
 Projects support **flat entries** and **groups**. Mix them freely in `projects/index.json`.
 
 ### Flat (no group)
+
 ```json
 [
   "my-tool"
 ]
 ```
+
 → looks for `projects/my-tool/project.json`
 
 ### Grouped
+
 ```json
 [
   { "group": "games",        "projects": ["snake", "chess"] },
   { "group": "games/arcade", "projects": ["pacman", "ping-pong"] }
 ]
 ```
+
 → looks for `projects/games/snake/project.json`, `projects/games/arcade/pacman/project.json`, etc.
 The group name is shown as a label above its cards (e.g. `games/` or `games/arcade/`).
 Leave `"group": ""` for a group with no label.
 
 ### Steps
+
 1. Create the folder at the right path (e.g. `projects/games/snake/`)
 2. Add `project.json` inside it:
+
    ```json
    {
      "name":  "Snake",
@@ -98,6 +106,7 @@ Leave `"group": ""` for a group with no label.
      "link":  "index.html"
    }
    ```
+
    - `image` — filename of a screenshot inside the same folder. Leave `""` to show the icon instead.
    - `link`  — file to open when the card is clicked (relative to the project folder).
 3. Add the slug to the right entry in `projects/index.json`.
@@ -110,6 +119,7 @@ That's it — no touching `index.html`.
 
 1. Create a folder: `blog/my-post-slug/`
 2. Create `blog/my-post-slug/post.json`:
+
    ```json
    {
      "title": "How I configured SSH key auth",
@@ -118,8 +128,10 @@ That's it — no touching `index.html`.
      "desc":  "Short description shown on the card."
    }
    ```
+
 3. Copy `blog/_TEMPLATE/index.html` to `blog/my-post-slug/index.html` and write your content
 4. Add the slug to `blog/index.json`:
+
    ```json
    ["lamp-server-debian", "my-post-slug"]
    ```
@@ -150,11 +162,14 @@ they jump to Scripts with that language pre-filtered.
 ## Contact form
 
 The form currently just shows a message. To make it send real emails:
+
 1. Create a free account at https://formspree.io
 2. In `index.html`, change the form:
+
    ```html
    <form class="contact-form" id="contact-form" action="https://formspree.io/f/YOUR_ID" method="POST">
    ```
+
 3. Remove the submit listener from `js/main.js` (the form will submit normally)
 
 ---
