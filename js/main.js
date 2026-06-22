@@ -4,7 +4,7 @@
    ================================================ */
 
 // ─────────────────────────────────────
-// NAVIGATION
+// NAVIGATION & DEEP LINKING
 // ─────────────────────────────────────
 const sections = document.querySelectorAll('.section');
 const navLinks = document.querySelectorAll('.nav-link');
@@ -25,25 +25,55 @@ function showSection(id) {
     }
   }
 
+  // Update active state on sidebar links
   document.querySelectorAll(`.nav-link[data-section="${id}"]`).forEach(l => l.classList.add('active'));
 
   // close mobile sidebar
-  document.getElementById('sidebar').classList.remove('open');
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.remove('open');
+  
+  // Scroll to top of the page smoothly when changing sections
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// Read the URL hash on load or when using back/forward browser buttons
+function handleUrlHash() {
+  const hash = window.location.hash.replace('#', '');
+  
+  // If hash exists and matches a valid section ID, show it. Otherwise, default to 'home'
+  if (hash && document.getElementById(hash) && document.getElementById(hash).classList.contains('section')) {
+    showSection(hash);
+  } else {
+    // Make sure your main landing section has id="home" in index.html!
+    showSection('home');
+    history.replaceState(null, null, '#home');
+  }
+}
+
+// Run routing on initial page load and on back/forward navigation
+window.addEventListener('DOMContentLoaded', handleUrlHash);
+window.addEventListener('hashchange', handleUrlHash);
 
 // click any element with data-section
 document.addEventListener('click', function(e) {
   const el = e.target.closest('[data-section]');
   if (el && !el.classList.contains('tag-lang')) {
     e.preventDefault();
-    showSection(el.dataset.section);
+    const targetId = el.dataset.section;
+    
+    // Update the URL without reloading the page
+    history.pushState(null, null, '#' + targetId);
+    showSection(targetId);
   }
 });
 
-// hamburger
-document.getElementById('hamburger').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('open');
-});
+// hamburger menu
+const hamburger = document.getElementById('hamburger');
+if (hamburger) {
+  hamburger.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+}
 
 // ─────────────────────────────────────
 // MULTI-TERMINAL PANELS
@@ -79,16 +109,19 @@ function expandPanel(panel) {
 }
 
 panels.forEach(panel => {
-  panel.querySelector('.term-bar').addEventListener('click', () => {
-    userClicked = true;
-    clearTimeout(autoTimer);
-    expandPanel(panel);
-  });
+  const bar = panel.querySelector('.term-bar');
+  if (bar) {
+    bar.addEventListener('click', () => {
+      userClicked = true;
+      clearTimeout(autoTimer);
+      expandPanel(panel);
+    });
+  }
 });
 
 // Auto-cycle: open each panel in sequence, close it, then open the next
 function autoCycle() {
-  if (userClicked) return;
+  if (userClicked || panels.length === 0) return;
   const panel = panels[autoIndex % panels.length];
   autoIndex++;
 
@@ -101,7 +134,7 @@ function autoCycle() {
 }
 
 setTimeout(() => {
-  if (!userClicked) autoCycle();
+  if (!userClicked && panels.length > 0) autoCycle();
 }, 900);
 
 // ─────────────────────────────────────
@@ -110,7 +143,11 @@ setTimeout(() => {
 document.querySelectorAll('.tag-lang').forEach(tag => {
   tag.addEventListener('click', () => {
     const lang = tag.dataset.lang;
+    
+    // Update URL to show we moved to scripts
+    history.pushState(null, null, '#scripts');
     showSection('scripts');
+    
     setTimeout(() => applyFilter(lang), 80);
   });
 });
@@ -140,8 +177,7 @@ function applyFilter(tag) {
     card.classList.toggle('sc-hidden', !tags.includes(tag));
   });
 
-  // 2. For each group bottom-up: visible if it has at least one visible child (card or sub-group)
-  //    We process deepest groups first by reversing the NodeList
+  // 2. For each group bottom-up: visible if it has at least one visible child
   const allGroups = [...document.querySelectorAll('.sg')].reverse();
   allGroups.forEach(group => {
     const hasVisibleCard  = [...group.querySelectorAll(':scope > .sg-children > .sc')]
@@ -166,7 +202,6 @@ function toggleGroup(hdr) {
 }
 window.toggleGroup = toggleGroup;
 
-// toggle individual script code block
 function toggleScript(row) {
   const card   = row.closest('.sc');
   const body   = card.querySelector('.sc-body');
@@ -180,32 +215,6 @@ window.toggleScript = toggleScript;
 // DYNAMIC LOADERS
 // ─────────────────────────────────────
 
-/* SCRIPTS — recursive tree
-   scripts/index.json format:
-
-   A script entry (leaf):
-   {
-     "file": "backup.sh",
-     "name": "backup.sh",
-     "lang": "bash",
-     "tags": ["bash", "backup", "rsync"],
-     "desc": "Short description."
-   }
-
-   A group entry (can contain scripts AND nested groups):
-   {
-     "group": "python",
-     "icon": "🐍",          ← optional, default 📁
-     "tags": ["python"],    ← inherited by all children for filtering
-     "items": [
-       { "file": "...", ... },
-       { "group": "subgroup", "items": [...] }
-     ]
-   }
-
-   Tags are INHERITED — a script's effective tags = its own tags UNION all ancestor group tags.
-   Filter shows a group if ANY descendant script matches.
-*/
 async function loadScripts() {
   const container = document.getElementById('scripts-list');
   try {
@@ -217,7 +226,6 @@ async function loadScripts() {
 
     const langClass = { bash:'sl-bash', powershell:'sl-ps', python:'sl-py', js:'sl-js', html:'sl-html', favorite:'sl-favorite' };
 
-    // Pre-fetch all script files in parallel to avoid waterfall
     const fileCache = {};
     function collectFiles(items) {
       for (const item of items) {
@@ -231,7 +239,6 @@ async function loadScripts() {
       catch(_) { fileCache[f] = '# could not load file'; }
     }));
 
-    // Count all leaf scripts in a group (for the badge)
     function countScripts(items) {
       let n = 0;
       for (const it of items) {
@@ -241,7 +248,6 @@ async function loadScripts() {
       return n;
     }
 
-    // Render a script card (leaf)
     function renderScript(entry, ancestorTags) {
       const ownTags  = entry.tags || [];
       const allTags  = [...new Set([...ancestorTags, ...ownTags])];
@@ -263,7 +269,6 @@ async function loadScripts() {
 </div>`;
     }
 
-    // Render a group (recursive)
     function renderGroup(item, ancestorTags, depth) {
       const groupTags  = [...new Set([...ancestorTags, ...(item.tags || [])])];
       const icon       = item.icon || '📁';
@@ -275,7 +280,6 @@ async function loadScripts() {
                    : renderGroup(child, groupTags, depth + 1)
       ).join('');
 
-      // depth=0 groups start open
       const openClass = depth === 0 ? 'sg-open' : '';
 
       return `
@@ -293,7 +297,6 @@ async function loadScripts() {
 </div>`;
     }
 
-    // Render top-level items
     const html = manifest.map(item =>
       item.file ? renderScript(item, [])
                 : renderGroup(item, [], 0)
@@ -307,64 +310,23 @@ async function loadScripts() {
   }
 }
 
-
-/* PROJECTS
-   Reads projects/index.json — supports flat slugs AND groups.
-
-   projects/index.json format — mix freely:
-   [
-     "standalone-project",
-     { "group": "games",        "projects": ["snake", "chess"] },
-     { "group": "games/arcade", "projects": ["pacman", "ping-pong"] }
-   ]
-
-   A flat "slug" looks in:          projects/slug/project.json
-   A grouped entry { group, slug }  looks in:  projects/group/slug/project.json
-
-   projects/snake/project.json:
-   {
-     "name":  "Snake",
-     "icon":  "🐍",
-     "image": "preview.png",   ← filename inside the same folder, or "" for none
-     "desc":  "Classic snake game.",
-     "tags":  ["HTML", "Canvas"],
-     "link":  "index.html"
-   }
-*/
 async function loadProjects() {
   const container = document.getElementById('projects-grid');
   try {
     const manifest = await fetch('projects/index.json').then(r => r.json());
 
-    // Flatten manifest into { path, slug } entries
-    // path = the full folder path relative to projects/  e.g. "games/snake"
-    const entries = [];
-    for (const item of manifest) {
-      if (typeof item === 'string') {
-        entries.push({ path: item, slug: item });
-      } else if (item.group !== undefined) {
-        for (const slug of item.projects) {
-          const folder = item.group ? `${item.group}/${slug}` : slug;
-          entries.push({ path: folder, slug });
-        }
-      }
-    }
-
-    // Build HTML — groups get a section header
     let html = '';
     let currentGroup = null;
 
     for (const item of manifest) {
       if (typeof item === 'string') {
-        // Standalone project — no group header
         if (currentGroup !== null) {
-          html += '</div></div>'; // close previous group
+          html += '</div></div>';
           currentGroup = null;
         }
         html += await buildProjectCard(`projects/${item}`, item);
 
       } else if (item.group !== undefined) {
-        // Close previous group if open
         if (currentGroup !== null) html += '</div></div>';
 
         const groupLabel = item.group || 'Projects';
@@ -413,23 +375,6 @@ async function buildProjectCard(folderPath, slug) {
   }
 }
 
-
-/* BLOG
-   Reads blog/index.json → array of folder names
-   Then fetches blog/{slug}/post.json from each.
-
-   blog/index.json example:
-   ["lamp-server-debian", "vlans-packet-tracer", "bash-tips"]
-
-   blog/lamp-server-debian/post.json example:
-   {
-     "title": "Setting up a LAMP server on Debian 12",
-     "date":  "2025-01-10",
-     "tag":   "Linux",
-     "desc":  "Step-by-step guide to install Apache, MySQL and PHP on a fresh Debian install."
-   }
-   The actual post is blog/{slug}/index.html
-*/
 async function loadBlog() {
   const container = document.getElementById('blog-grid');
   try {
@@ -453,7 +398,7 @@ async function loadBlog() {
       }
     }));
 
-    container.innerHTML = cards.join('') || '<p class="loading-msg">No posts yet. Add folders to blog/ and list them in blog/index.json.</p>';
+    container.innerHTML = cards.join('') || '<p class="loading-msg">No posts yet.</p>';
 
   } catch(err) {
     container.innerHTML = fetchErrorMsg('blog/index.json', err);
@@ -463,12 +408,15 @@ async function loadBlog() {
 // ─────────────────────────────────────
 // CONTACT FORM
 // ─────────────────────────────────────
-document.getElementById('contact-form').addEventListener('submit', function(e) {
-  e.preventDefault();
-  document.getElementById('form-feedback').textContent =
-    '✓ Message sent! (connect to Formspree or similar to make this real)';
-  this.reset();
-});
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+  contactForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    document.getElementById('form-feedback').textContent =
+      '✓ Message sent! (connect to Formspree or similar to make this real)';
+    this.reset();
+  });
+}
 
 // ─────────────────────────────────────
 // UTILS
