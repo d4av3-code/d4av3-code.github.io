@@ -1,6 +1,0 @@
-[
-  { 
-    "group": "infrastructure", 
-    "projects": ["proxmox-homelab", "web-server", "cloudflare-tunnel", "ansible"] 
-  }
-]
